@@ -28,7 +28,7 @@ st.subheader("Model Performance")
 st.write(f"Mean Squared Error: {mse:.2f}")
 st.write(f"R-squared: {r2:.2f}")
 
-st.subheader("Interactive Prediction")
+st.sidebar.header("Adjust Features")
 
 user_input = []
 for i, feature in enumerate(feature_names):
@@ -36,8 +36,8 @@ for i, feature in enumerate(feature_names):
     max_val = float(X[:, i].max())
     default_val = float(X[:, i].mean())
 
-    val = st.slider(
-        f"{feature}",
+    val = st.sidebar.slider(
+        feature,
         min_val,
         max_val,
         default_val,
@@ -48,6 +48,7 @@ for i, feature in enumerate(feature_names):
 user_input = np.array(user_input).reshape(1, -1)
 prediction = model.predict(user_input)[0]
 
+st.subheader("Real-Time Prediction")
 st.write(f"Predicted Diabetes Progression: {prediction:.2f}")
 
 fig, axs = plt.subplots(1, 2, figsize=(14, 6))
@@ -64,7 +65,8 @@ axs[0].set_xlabel("True Values")
 axs[0].set_ylabel("Predicted Values")
 
 axs[1].scatter(X_test[:, 2], y_pred, color='green', alpha=0.7)
-axs[1].set_title("Feature (BMI) vs Predicted Values")
+axs[1].scatter(user_input[0][2], prediction, color='red', s=100)
+axs[1].set_title("BMI vs Predicted Values")
 axs[1].set_xlabel("BMI (Feature 2)")
 axs[1].set_ylabel("Predicted Diabetes Progression")
 axs[1].grid(True)
