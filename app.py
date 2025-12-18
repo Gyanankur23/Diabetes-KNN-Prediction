@@ -13,8 +13,14 @@ X = diabetes.data
 y = diabetes.target
 feature_names = diabetes.feature_names
 
+# Important features only
+important_features = ["age", "sex", "bmi", "bp", "s5"]
+indices = [feature_names.index(f) for f in important_features]
+
+X_imp = X[:, indices]
+
 X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.2, random_state=42
+    X_imp, y, test_size=0.2, random_state=42
 )
 
 model = LinearRegression()
@@ -28,28 +34,32 @@ st.subheader("Model Performance")
 st.write(f"Mean Squared Error: {mse:.2f}")
 st.write(f"R-squared: {r2:.2f}")
 
-st.sidebar.header("Adjust Features")
+st.sidebar.header("Patient Inputs")
 
-user_input = []
-for i, feature in enumerate(feature_names):
-    min_val = float(X[:, i].min())
-    max_val = float(X[:, i].max())
-    default_val = float(X[:, i].mean())
+# Realistic ranges
+age = st.sidebar.slider("Age (years)", 20, 80, 45)
+sex = st.sidebar.selectbox("Sex", ["Male", "Female"])
+bmi = st.sidebar.slider("BMI", 15.0, 45.0, 25.0)
+bp = st.sidebar.slider("Blood Pressure (mmHg)", 60, 180, 120)
+s5 = st.sidebar.slider("Serum Measurement (S5)", 90, 200, 120)
 
-    val = st.sidebar.slider(
-        feature,
-        min_val,
-        max_val,
-        default_val,
-        step=(max_val - min_val) / 100
-    )
-    user_input.append(val)
+# Convert to standardized values (dataset is standardized)
+def standardize(value, original_column):
+    col = X[:, original_column]
+    return (value - col.mean()) / col.std()
 
-user_input = np.array(user_input).reshape(1, -1)
-prediction = model.predict(user_input)[0]
+user_std = np.array([
+    standardize(age, feature_names.index("age")),
+    1.0 if sex == "Male" else -1.0,
+    standardize(bmi, feature_names.index("bmi")),
+    standardize(bp, feature_names.index("bp")),
+    standardize(s5, feature_names.index("s5"))
+]).reshape(1, -1)
 
-st.subheader("Real-Time Prediction")
-st.write(f"Predicted Diabetes Progression: {prediction:.2f}")
+prediction = model.predict(user_std)[0]
+
+st.subheader("Predicted Diabetes Progression")
+st.write(f"{prediction:.2f}")
 
 fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -64,10 +74,10 @@ axs[0].set_title("True vs Predicted Values")
 axs[0].set_xlabel("True Values")
 axs[0].set_ylabel("Predicted Values")
 
-axs[1].scatter(X_test[:, 2], y_pred, color='green', alpha=0.7)
-axs[1].scatter(user_input[0][2], prediction, color='red', s=100)
+axs[1].scatter(X_test[:, important_features.index("bmi")], y_pred, color='green', alpha=0.7)
+axs[1].scatter(bmi, prediction, color='red', s=100)
 axs[1].set_title("BMI vs Predicted Values")
-axs[1].set_xlabel("BMI (Feature 2)")
+axs[1].set_xlabel("BMI")
 axs[1].set_ylabel("Predicted Diabetes Progression")
 axs[1].grid(True)
 
