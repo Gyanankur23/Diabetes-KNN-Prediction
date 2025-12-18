@@ -11,6 +11,7 @@ st.title("Diabetes Linear Regression Model")
 diabetes = load_diabetes()
 X = diabetes.data
 y = diabetes.target
+feature_names = diabetes.feature_names
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
@@ -23,8 +24,31 @@ y_pred = model.predict(X_test)
 mse = mean_squared_error(y_test, y_pred)
 r2 = r2_score(y_test, y_pred)
 
+st.subheader("Model Performance")
 st.write(f"Mean Squared Error: {mse:.2f}")
 st.write(f"R-squared: {r2:.2f}")
+
+st.subheader("Interactive Prediction")
+
+user_input = []
+for i, feature in enumerate(feature_names):
+    min_val = float(X[:, i].min())
+    max_val = float(X[:, i].max())
+    default_val = float(X[:, i].mean())
+
+    val = st.slider(
+        f"{feature}",
+        min_val,
+        max_val,
+        default_val,
+        step=(max_val - min_val) / 100
+    )
+    user_input.append(val)
+
+user_input = np.array(user_input).reshape(1, -1)
+prediction = model.predict(user_input)[0]
+
+st.write(f"Predicted Diabetes Progression: {prediction:.2f}")
 
 fig, axs = plt.subplots(1, 2, figsize=(14, 6))
 
@@ -39,11 +63,10 @@ axs[0].set_title("True vs Predicted Values")
 axs[0].set_xlabel("True Values")
 axs[0].set_ylabel("Predicted Values")
 
-axs[1].grid(True)
 axs[1].scatter(X_test[:, 2], y_pred, color='green', alpha=0.7)
 axs[1].set_title("Feature (BMI) vs Predicted Values")
 axs[1].set_xlabel("BMI (Feature 2)")
-axs[1].set_ylabel("predicted Diabetes Progression")
+axs[1].set_ylabel("Predicted Diabetes Progression")
 axs[1].grid(True)
 
 plt.tight_layout()
