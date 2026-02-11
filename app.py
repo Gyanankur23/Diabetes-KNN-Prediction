@@ -1,5 +1,5 @@
 import streamlit as st
-import numpy as np
+import numpy as np #Gyanankur
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import train_test_split
